@@ -50,8 +50,26 @@ exports.getBestRating = async (req, res) => {
 // CREATE BOOK - Créer un nouveau livre (protégé)
 exports.createBook = async (req, res) => {
   try {
+    // Gestion du format frontend : compatibilité avec différents clients
+    // Le frontend OpenClassrooms envoie les données dans req.body.book (JSON string)
+    // Postman et autres clients envoient directement dans req.body
+    let bookData
+    if (req.body.book) {
+      try {
+        bookData = JSON.parse(req.body.book)
+      } catch (error) {
+        return res.status(400).json({
+          message: 'Format de données invalide',
+        })
+      }
+    } else {
+      // Fallback : données directement dans req.body (Postman, etc.)
+      bookData = req.body
+    }
+
     // Validation des données requises
-    const { title, author, year, genre } = req.body
+    const { title, author, year, genre } = bookData
+
     if (!title || !author || !year || !genre) {
       return res.status(400).json({
         message: 'Tous les champs sont requis (title, author, year, genre)',
@@ -129,7 +147,20 @@ exports.updateBook = async (req, res) => {
       })
     }
 
-    let updateData = { ...req.body }
+    // Gestion du format frontend : compatibilité avec différents clients
+    let updateData
+    if (req.body.book) {
+      try {
+        updateData = JSON.parse(req.body.book)
+      } catch (error) {
+        return res.status(400).json({
+          message: 'Format de données invalide',
+        })
+      }
+    } else {
+      // Fallback : données directement dans req.body (Postman, etc.)
+      updateData = { ...req.body }
+    }
 
     // Validation des données si elles sont fournies
     if (updateData.year) {
